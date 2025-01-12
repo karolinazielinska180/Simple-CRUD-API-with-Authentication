@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Simple-CRUD-API-with-Authentication.iml" filepath="$PROJECT_DIR$/.idea/Simple-CRUD-API-with-Authentication.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/SimpleCrudAPI.main.iml" filepath="$PROJECT_DIR$/.idea/modules/SimpleCrudAPI.main.iml" />
     </modules>
   </component>
 </project>
