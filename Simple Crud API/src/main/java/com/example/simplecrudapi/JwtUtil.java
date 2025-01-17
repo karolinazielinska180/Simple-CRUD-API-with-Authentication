@@ -11,9 +11,9 @@ import java.util.Date;
 @Component
 public class JwtUtil {
     @Value("${jwt.secret}")
-    private final String SECRET_KEY = "your_secret_key";
+    private String SECRET_KEY;
     @Value("${jwt.expiration}")
-    private final long EXPIRATION_TIME = 1000 * 60 * 60 * 10;
+    private long EXPIRATION_TIME;
 
     public String generateToken(String username) {
         return Jwts.builder()
@@ -23,6 +23,7 @@ public class JwtUtil {
                 .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
                 .compact();
     }
+
     public boolean validate(String token) {
         try {
             Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token);

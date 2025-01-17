@@ -16,23 +16,23 @@ import java.io.IOException;
 import java.util.List;
 
 
-
 @Component
 public class AuthJwtTokenFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public AuthJwtTokenFilter(JwtUtil jwtUtil, UserRepository userRepository) {
+    public AuthJwtTokenFilter(JwtUtil jwtUtil, UserService userService) {
         this.jwtUtil = jwtUtil;
-        this.userRepository = userRepository;
+        this.userService=userService;
     }
 
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         final String header = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (header.isEmpty() || !header.startsWith("Bearer ")) {
+
+        if (header == null || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -41,8 +41,13 @@ public class AuthJwtTokenFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        UserDetails userDetails = userRepository
-                .findByUsername(jwtUtil.getUsername(token));
+        UserDetails userDetails = null;
+        try {
+            userDetails =userService
+                    .findByUsername(jwtUtil.getUsername(token));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
 
         UsernamePasswordAuthenticationToken
