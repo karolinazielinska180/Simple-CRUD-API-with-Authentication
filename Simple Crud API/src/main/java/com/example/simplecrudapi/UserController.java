@@ -1,8 +1,12 @@
 package com.example.simplecrudapi;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.webauthn.api.AuthenticatorResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -43,14 +47,22 @@ public class UserController {
         return "login_form";
     }
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestParam("username") String username,@RequestParam("password")  String password) throws Exception {
-        AppUser appUser =userService.findByUsername(username);
-
+    public ResponseEntity<?> login(@RequestParam("username") String username, @RequestParam("password")  String password, HttpServletResponse response) throws Exception {
+        AppUser appUser =userService.userLogin(username,password);
         if (!passwordEncoder.matches(password, appUser.getPassword())) {
-            return ResponseEntity.badRequest().body("Invalid username or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         }
         String jwtToken = jwtUtil.generateToken(appUser.getUsername());
-        return ResponseEntity.ok(Map.of("token", jwtToken));
+        Cookie cookie = new Cookie("jwtToken", jwtToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(60*60); // 1 godzina
+        response.addCookie(cookie);
+        ResponseToken responseToken=new ResponseToken();
+        responseToken.setToken(jwtToken);
+        responseToken.setExpirationDate(jwtUtil.getExpiration(jwtToken));
+        return ResponseEntity.ok(responseToken);
     }
 
 

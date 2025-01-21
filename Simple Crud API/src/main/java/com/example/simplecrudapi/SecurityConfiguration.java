@@ -22,8 +22,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.lang.reflect.Method;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -53,7 +57,6 @@ public class SecurityConfiguration {
     }
     @Bean
     public UserDetailsService userDetailsService() {
-        // Define UserDetailsService using the repository to fetch user details
         return username -> userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
     }
@@ -64,7 +67,6 @@ public class SecurityConfiguration {
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
-//                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth ->
@@ -73,6 +75,7 @@ public class SecurityConfiguration {
                 .addFilterBefore(
                         authJwtTokenFilter, UsernamePasswordAuthenticationFilter.class
                 )
+                .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .build();
     }
 
@@ -83,6 +86,17 @@ public class SecurityConfiguration {
                         .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username)))
                 .passwordEncoder(bCryptPasswordEncoder).and().build();
     }
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
 
+        configuration.setAllowedOrigins(List.of("http://localhost:8005"));
+        configuration.setAllowedMethods(List.of("GET","POST"));
+        configuration.setAllowedHeaders(List.of("Authorization","Content-Type"));
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration("/**",configuration);
+        return source;
+    }
 
 }
